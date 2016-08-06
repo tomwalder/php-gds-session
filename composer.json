@@ -1,0 +1,30 @@
+{
+    "name": "tomwalder/php-gds-session",
+    "type": "library",
+    "description": "Datastore Session Handler for PHP on Google AppEngine",
+    "keywords": ["google", "datastore", "appengine", "gae", "cloud datastore", "nosql", "session", "handler"],
+    "homepage": "https://github.com/tomwalder/php-gds-session",
+    "license": "Apache-2.0",
+    "authors": [
+        {
+            "name": "Tom Walder",
+            "email": "tom@docnet.nu"
+        }
+    ],
+    "require": {
+        "php": ">=5.5.4",
+        "tomwalder/php-gds": "2.1.*"
+    },
+    "require-dev": {
+        "google/appengine-php-sdk": ">=1.9.22",
+        "phpunit/phpunit": "~4.8",
+        "satooshi/php-coveralls": "dev-master"
+    },
+    "autoload": {
+        "classmap": [
+            "src/"
+        ],
+        "psr-4": {"GDS\\": "src/GDS/"}
+    },
+    "include-path": ["src/"]
+}
