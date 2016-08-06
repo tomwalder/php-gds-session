@@ -6,6 +6,12 @@ threadsafe: yes
 
 handlers:
 
+# Favicon
+
+- url: /favicon\.ico
+  static_files: examples/favicon.ico
+  upload: examples/favicon\.ico
+
 # Default rule
 
 - url: .*
