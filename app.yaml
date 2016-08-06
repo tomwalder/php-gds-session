@@ -1,0 +1,13 @@
+application: gds-session-demo
+version: demo
+runtime: php55
+api_version: 1
+threadsafe: yes
+
+handlers:
+
+# Default rule
+
+- url: .*
+  script: examples/index.php
+  secure: always
