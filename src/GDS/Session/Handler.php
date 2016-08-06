@@ -135,12 +135,18 @@ class Handler implements \SessionHandlerInterface
      */
     public function destroy($str_id)
     {
-        if($this->obj_session_entity && $str_id === $this->obj_session_entity->getKeyName()) {
+        if($this->obj_session_entity instanceof Entity && $str_id === $this->obj_session_entity->getKeyName()) {
             $this->getStore()->delete($this->obj_session_entity);
+            $this->obj_session_entity = null;
+            $this->str_data = '';
+            $this->bol_new = false;
         } else {
             $obj_session_entity = $this->getStore()->fetchByName($str_id);
-            $this->getStore()->delete($obj_session_entity);
+            if($obj_session_entity instanceof Entity) {
+                $this->getStore()->delete($obj_session_entity);
+            }
         }
+        $this->obj_mc->delete($this->getMemcacheKey($str_id));
         return true;
     }
 
