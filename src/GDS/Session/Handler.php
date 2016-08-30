@@ -74,13 +74,15 @@ class Handler implements \SessionHandlerInterface
      * Configure session handle etc.
      *
      * Use a better hash function than the PHP default.
+     *
+     * @param int $int_duration
      */
-    public function __construct()
+    public function __construct($int_duration = self::DURATION_DAY)
     {
         ini_set('session.hash_function', 'sha512');
         ini_set('session.name', self::HANDLE); // Use our own session name
         ini_set('session.serialize_handler', 'php_serialize'); // More robust serialisation since 5.5.4
-        ini_set('session.cookie_lifetime', $this->getTimeout());
+        $this->setTimeout($int_duration);
         register_shutdown_function('session_write_close');
         $this->obj_mc = new \Memcached();
     }
@@ -92,8 +94,7 @@ class Handler implements \SessionHandlerInterface
      */
     public static function start($int_duration = self::DURATION_DAY)
     {
-        $obj_handler = new self;
-        $obj_handler->setTimeout($int_duration);
+        $obj_handler = new self($int_duration);
         session_set_save_handler(
             [$obj_handler, 'open'],
             [$obj_handler, 'close'],
@@ -306,7 +307,8 @@ class Handler implements \SessionHandlerInterface
      */
     public function setTimeout($int_duration)
     {
-        return $this->int_duration;
+        $this->int_duration = $int_duration;
+        ini_set('session.cookie_lifetime', $int_duration);
     }
 
     /**
