@@ -104,8 +104,10 @@ class Handler implements \SessionHandlerInterface
             [$obj_handler, 'gc']
         );
         session_start();
-        // Reset the session cookie lifetime to be from now rather than the session creation
-        setcookie(session_name(), session_id(), time() + $int_duration);
+
+        // Reset (extend) the session cookie lifetime to be from now rather than the session creation
+        // @todo review use of "session.cookie_path" rather than hard-coded to '/'
+        setcookie(session_name(), session_id(), time() + $int_duration, '/');
     }
 
     /**
