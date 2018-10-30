@@ -13,7 +13,7 @@
     ],
     "require": {
         "php": ">=5.5.4",
-        "tomwalder/php-gds": "4.*"
+        "tomwalder/php-gds": "v4.*"
     },
     "require-dev": {
         "google/appengine-php-sdk": ">=1.9.22",
