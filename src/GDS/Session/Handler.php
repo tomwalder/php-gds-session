@@ -34,7 +34,7 @@ class Handler implements \SessionHandlerInterface
     const DURATION_DAY = 86400;
     const DURATION_WEEK = 604800;
 
-    const HANDLE = 'GDSSIDv1';
+    const HANDLE = 'GDSSIDv2';
 
     /**
      * @var Store
@@ -247,15 +247,15 @@ class Handler implements \SessionHandlerInterface
         // syslog(LOG_WARNING, __METHOD__ . "() Writing to Datastore");
         try {
             $obj_store = $this->getStore();
-            $str_now = date('Y-m-d H:i:s');
+            $obj_now = new \DateTime();
             if ($this->obj_session_entity instanceof Entity) {
                 $this->obj_session_entity->data = $str_session_data;
-                $this->obj_session_entity->updated = $str_now;
+                $this->obj_session_entity->updated = $obj_now;
             } else {
                 $this->obj_session_entity = $obj_store->createEntity([
                     'data' => $str_session_data,
-                    'created' => $str_now,
-                    'updated' => $str_now
+                    'created' => $obj_now,
+                    'updated' => $obj_now
                 ]);
                 $this->obj_session_entity->setKeyName($str_id);
             }

@@ -13,12 +13,11 @@
     ],
     "require": {
         "php": ">=5.5.4",
-        "tomwalder/php-gds": "3.*"
+        "tomwalder/php-gds": "4.*"
     },
     "require-dev": {
         "google/appengine-php-sdk": ">=1.9.22",
-        "phpunit/phpunit": "~4.8",
-        "satooshi/php-coveralls": "dev-master"
+        "phpunit/phpunit": "~4.8"
     },
     "autoload": {
         "classmap": [
