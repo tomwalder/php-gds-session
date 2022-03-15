@@ -17,7 +17,7 @@
 namespace GDS\Session;
 
 use GDS\Entity;
-use GDS\Gateway\ProtoBuf;
+use GDS\Gateway;
 use GDS\Schema;
 use GDS\Store;
 
@@ -34,7 +34,7 @@ class Handler implements \SessionHandlerInterface
     const DURATION_DAY = 86400;
     const DURATION_WEEK = 604800;
 
-    const HANDLE = 'GDSSIDv2';
+    const HANDLE = 'GDSSIDv3';
 
     /**
      * @var Store
@@ -42,9 +42,9 @@ class Handler implements \SessionHandlerInterface
     private $obj_store = null;
 
     /**
-     * @var \Memcached
+     * @var \Memcached|NullMemcached
      */
-    private $obj_mc = null;
+    private static $obj_mc;
 
     /**
      * Session data (serialised)
@@ -71,20 +71,49 @@ class Handler implements \SessionHandlerInterface
     private $int_duration = self::DURATION_DAY;
 
     /**
+     * @var Gateway
+     */
+    private static $obj_gateway;
+
+    /**
      * Configure session handle etc.
      *
      * Use a better hash function than the PHP default.
      *
      * @param int $int_duration
      */
-    public function __construct($int_duration = self::DURATION_DAY)
+    public function __construct(int $int_duration = self::DURATION_DAY)
     {
         ini_set('session.hash_function', 'sha512');
         ini_set('session.name', self::HANDLE); // Use our own session name
         ini_set('session.serialize_handler', 'php_serialize'); // More robust serialisation since 5.5.4
         $this->setTimeout($int_duration);
         register_shutdown_function('session_write_close');
-        $this->obj_mc = new \Memcached();
+        if (!isset(self::$obj_mc)) {
+            self::$obj_mc = new NullMemcached();
+        }
+    }
+
+    /**
+     * Configure the GDS gateway to use
+     *
+     * @param Gateway $obj_gateway
+     * @return void
+     */
+    public static function setGateway(Gateway $obj_gateway)
+    {
+        self::$obj_gateway = $obj_gateway;
+    }
+
+    /**
+     * Configure the Memcached instance to use
+     *
+     * @param \Memcached $obj_mc
+     * @return void
+     */
+    public static function setMemcached(\Memcached $obj_mc)
+    {
+        self::$obj_mc = $obj_mc;
     }
 
     /**
@@ -92,7 +121,7 @@ class Handler implements \SessionHandlerInterface
      *
      * @param int $int_duration
      */
-    public static function start($int_duration = self::DURATION_DAY)
+    public static function start(int $int_duration = self::DURATION_DAY)
     {
         $obj_handler = new self($int_duration);
         session_set_save_handler(
@@ -151,7 +180,7 @@ class Handler implements \SessionHandlerInterface
                 $this->getStore()->delete($obj_session_entity);
             }
         }
-        $this->obj_mc->delete($this->getMemcacheKey($str_id));
+        self::$obj_mc->delete($this->getMemcacheKey($str_id));
         return true;
     }
 
@@ -175,7 +204,7 @@ class Handler implements \SessionHandlerInterface
     public function read($str_id)
     {
         $str_memcache_key = $this->getMemcacheKey($str_id);
-        $this->str_data = $this->obj_mc->get($str_memcache_key);
+        $this->str_data = self::$obj_mc->get($str_memcache_key);
         if(false === $this->str_data) {
             // not in Memcache, trying datastore
             $this->obj_session_entity = $this->getStore()->fetchByName($str_id);
@@ -183,7 +212,7 @@ class Handler implements \SessionHandlerInterface
                 // @todo Validate session age against duration
                 $this->str_data = (string)$this->obj_session_entity->data;
                 // found in Datastore, updating Memcache
-                $this->obj_mc->set($str_memcache_key, $this->str_data, $this->getTimeout());
+                self::$obj_mc->set($str_memcache_key, $this->str_data, $this->getTimeout());
             } else {
                 // New session!
                 $this->bol_new = true;
@@ -223,12 +252,11 @@ class Handler implements \SessionHandlerInterface
      */
     private function cache($str_id, $str_session_data)
     {
-        // syslog(LOG_WARNING, __METHOD__ . "() Writing to Memcache");
         try {
             $str_memcache_key = $this->getMemcacheKey($str_id);
-            $bol_replaced = $this->obj_mc->replace($str_memcache_key, $str_session_data, $this->getTimeout());
+            $bol_replaced = self::$obj_mc->replace($str_memcache_key, $str_session_data, $this->getTimeout());
             if (false === $bol_replaced) {
-                $this->obj_mc->set($str_memcache_key, $str_session_data, $this->getTimeout());
+                self::$obj_mc->set($str_memcache_key, $str_session_data, $this->getTimeout());
             }
         } catch (\Exception $obj_ex) {
             syslog(LOG_WARNING, __METHOD__ . "() Unable to write to Memcache: " . $obj_ex->getMessage());
@@ -244,7 +272,6 @@ class Handler implements \SessionHandlerInterface
      */
     private function persist($str_id, $str_session_data)
     {
-        // syslog(LOG_WARNING, __METHOD__ . "() Writing to Datastore");
         try {
             $obj_store = $this->getStore();
             $obj_now = new \DateTime();
@@ -273,7 +300,10 @@ class Handler implements \SessionHandlerInterface
     private function getStore()
     {
         if(null === $this->obj_store) {
-            $this->obj_store = new Store($this->createSchema(), new ProtoBuf());
+            $this->obj_store = new Store(
+                $this->createSchema(),
+                self::$obj_gateway ?? null
+            );
         }
         return $this->obj_store;
     }
@@ -307,7 +337,6 @@ class Handler implements \SessionHandlerInterface
      * Set the session timeout
      *
      * @param $int_duration
-     * @return int
      */
     public function setTimeout($int_duration)
     {
@@ -321,7 +350,7 @@ class Handler implements \SessionHandlerInterface
      * @param $str_id
      * @return string
      */
-    private function getMemcacheKey($str_id)
+    private function getMemcacheKey($str_id): string
     {
         return 'GDS_Session_' . self::HANDLE . '_' . $str_id;
     }

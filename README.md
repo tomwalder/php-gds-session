@@ -23,13 +23,41 @@ That's it!
 
 This will replace the default Memcache session handler with a shiny new one.  This method does call `session_start()` so make sure you're not doing that too!
 
+### Optional Configuration ###
+
+You may want to set a `\Memcached` instance, for improved performance
+```php
+$mc = new Memcached('mc');
+$mc->addServer('127.0.0.1', 11211);
+GDS\Session\Handler::setMemcached($mc);
+```
+
+You may want to supply your own GDS Gateway instance, configured to point at the correct project with the right protocol (gRPC / REST etc.).
+
+If you do NOT supply your own, the default is "REST" and against the current Google Cloud project. [More details here](https://github.com/tomwalder/php-gds/blob/master/src/GDS/Store.php#L82).
+
+```php
+$gw = new \GDS\Gateway\GRPCv1('my-project-id');
+GDS\Session\Handler::setGateway($gw);
+```
+
+### All Together Now ###
+Your setup might look like this with Memcached as custom Gateway. It's recommended to call `::start()` last.
+```php
+// ... configure Memcached & Gateway
+GDS\Session\Handler::setMemcached($mc);
+GDS\Session\Handler::setGateway($gw);
+GDS\Session\Handler::start();
+```
+
+
 ## Installation ##
 
 ### Composer ###
 
 To install using Composer, use this require line, for production
 
-`"tomwalder/php-gds-session": "v1.0.0"`
+`"tomwalder/php-gds-session": "^3.0"`
 
 ## Session Duration ##
 

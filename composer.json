@@ -12,12 +12,8 @@
         }
     ],
     "require": {
-        "php": ">=5.5.4",
-        "tomwalder/php-gds": "v4.*"
-    },
-    "require-dev": {
-        "google/appengine-php-sdk": ">=1.9.22",
-        "phpunit/phpunit": "~4.8"
+        "php": ">=7.0",
+        "tomwalder/php-gds": "^5.1"
     },
     "autoload": {
         "classmap": [
