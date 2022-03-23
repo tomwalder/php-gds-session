@@ -188,11 +188,12 @@ class Handler implements \SessionHandlerInterface
      * NOOP
      *
      * @param int $int_lifetime
-     * @return bool
+     * @return int|false
      */
-    public function gc($int_lifetime) :bool
+    public function gc($int_lifetime) :int|false
     {
-        return true;
+        //@todo - implement this? PHP8.1 expects number of deleted sessions to be returned, or false on failure
+        return 0;
     }
 
     /**
