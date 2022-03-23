@@ -146,7 +146,7 @@ class Handler implements \SessionHandlerInterface
      * @param string $str_name
      * @return bool
      */
-    public function open($str_path, $str_name)
+    public function open($str_path, $str_name) :bool
     {
         return true;
     }
@@ -156,7 +156,7 @@ class Handler implements \SessionHandlerInterface
      *
      * @return bool
      */
-    public function close()
+    public function close() :bool
     {
         return true;
     }
@@ -167,7 +167,7 @@ class Handler implements \SessionHandlerInterface
      * @param string $str_id
      * @return bool
      */
-    public function destroy($str_id)
+    public function destroy($str_id) :bool
     {
         if($this->obj_session_entity instanceof Entity && $str_id === $this->obj_session_entity->getKeyName()) {
             $this->getStore()->delete($this->obj_session_entity);
@@ -190,7 +190,7 @@ class Handler implements \SessionHandlerInterface
      * @param int $int_lifetime
      * @return bool
      */
-    public function gc($int_lifetime)
+    public function gc($int_lifetime) :bool
     {
         return true;
     }
@@ -199,9 +199,9 @@ class Handler implements \SessionHandlerInterface
      * Read the session. Ideally from Memcache (fast), but if not from Datastore.
      *
      * @param string $str_id
-     * @return mixed|string
+     * @return string|false
      */
-    public function read($str_id)
+    public function read($str_id) :string|false
     {
         $str_memcache_key = $this->getMemcacheKey($str_id);
         $this->str_data = self::$obj_mc->get($str_memcache_key);
@@ -231,7 +231,7 @@ class Handler implements \SessionHandlerInterface
      * @param string $str_session_data
      * @return bool
      */
-    public function write($str_id, $str_session_data)
+    public function write($str_id, $str_session_data) :bool
     {
         if($this->str_data == $str_session_data) {
             if($this->bol_new) {
@@ -297,7 +297,7 @@ class Handler implements \SessionHandlerInterface
      *
      * @return Store
      */
-    private function getStore()
+    private function getStore() :Store
     {
         if(null === $this->obj_store) {
             $this->obj_store = new Store(
@@ -315,7 +315,7 @@ class Handler implements \SessionHandlerInterface
      *
      * @return Schema
      */
-    private function createSchema()
+    private function createSchema() :Schema
     {
         return (new Schema('GDS_Session'))
             ->addString('data', false)
@@ -328,7 +328,7 @@ class Handler implements \SessionHandlerInterface
      *
      * @return int
      */
-    private function getTimeout()
+    private function getTimeout() :int
     {
         return $this->int_duration;
     }
